@@ -25,7 +25,7 @@ const STORE_PATH = path.join(DATA_DIR, "store.json");
 const SEED_PATH = path.join(process.cwd(), "seed", "demo.json");
 
 // next dev의 HMR과 빌드 시 모듈이 여러 번 평가되므로 전역에 캐시를 붙인다.
-const globalForStore = globalThis as unknown as { __petnoteStore?: Store };
+const globalForStore = globalThis as unknown as { __dodamStore?: Store };
 
 const EMPTY: Store = { pets: [], records: [], orders: [] };
 
@@ -37,7 +37,7 @@ const EMPTY: Store = { pets: [], records: [], orders: [] };
  * 둘러보기'를 두어, 심사자가 한 번 눌러 전 기능을 확인할 수 있게 했다.
  */
 function loadStore(): Store {
-  if (globalForStore.__petnoteStore) return globalForStore.__petnoteStore;
+  if (globalForStore.__dodamStore) return globalForStore.__dodamStore;
 
   const store: Store = fs.existsSync(STORE_PATH)
     ? (JSON.parse(fs.readFileSync(STORE_PATH, "utf-8")) as Store)
@@ -45,7 +45,7 @@ function loadStore(): Store {
 
   if (!fs.existsSync(STORE_PATH)) persist(store);
 
-  globalForStore.__petnoteStore = store;
+  globalForStore.__dodamStore = store;
   return store;
 }
 
@@ -58,7 +58,7 @@ function persist(store: Store) {
 }
 
 function commit(store: Store) {
-  globalForStore.__petnoteStore = store;
+  globalForStore.__dodamStore = store;
   persist(store);
 }
 

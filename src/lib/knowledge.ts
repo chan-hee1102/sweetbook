@@ -43,7 +43,7 @@ type Index = {
   avgDocLen: number;
 };
 
-const globalForIndex = globalThis as unknown as { __petnoteIndex?: Index };
+const globalForIndex = globalThis as unknown as { __dodamIndex?: Index };
 
 /* ───────────────────────── 토크나이저 ───────────────────────── */
 
@@ -100,7 +100,7 @@ export function keyTermsOf(query: string): Set<string> {
 /* ─────────────────────────── 색인 ─────────────────────────── */
 
 function buildIndex(): Index {
-  if (globalForIndex.__petnoteIndex) return globalForIndex.__petnoteIndex;
+  if (globalForIndex.__dodamIndex) return globalForIndex.__dodamIndex;
 
   const seedPath = path.join(process.cwd(), "seed", "knowledge.json");
   const items = JSON.parse(fs.readFileSync(seedPath, "utf-8")) as KnowledgeItem[];
@@ -125,7 +125,7 @@ function buildIndex(): Index {
 
   const avgDocLen = docLen.reduce((a, b) => a + b, 0) / (docLen.length || 1);
   const index: Index = { items, postings, docLen, avgDocLen };
-  globalForIndex.__petnoteIndex = index;
+  globalForIndex.__dodamIndex = index;
   return index;
 }
 

@@ -1,16 +1,30 @@
 services:
-  web:
+  dodam:
     build: .
+    container_name: dodam
     # 심사자 환경의 포트 충돌을 피하려면 PORT만 바꾸면 된다.
     #   PORT=4000 docker compose up      (또는 아래 3000을 직접 수정)
     ports:
       - "${PORT:-3000}:3000"
     environment:
-      # 외부 API 키는 하나도 쓰지 않는다. 이 앱이 읽는 환경변수는 DATA_DIR 뿐이다.
+      # 이 앱이 읽는 환경변수는 DATA_DIR 하나뿐이다. 외부 API 키는 쓰지 않는다.
       - DATA_DIR=/app/data
     volumes:
-      - petnote_data:/app/data
+      # 반려동물·기록·주문이 저장되는 곳. 컨테이너를 지워도 데이터는 남는다.
+      #   전부 비우고 처음부터 보려면:  docker compose down -v
+      - dodam_data:/app/data
+    # 컨테이너가 뜬 것과 앱이 응답하는 것은 다르다. 실제로 200을 주는지 확인한다.
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - -e
+        - "fetch('http://127.0.0.1:3000/').then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))"
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
     restart: unless-stopped
 
 volumes:
-  petnote_data:
+  dodam_data:
