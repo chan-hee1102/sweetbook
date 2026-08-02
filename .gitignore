@@ -1,0 +1,13 @@
+node_modules/
+.next/
+out/
+build/
+next-env.d.ts
+*.tsbuildinfo
+
+# 런타임 저장소 — 컨테이너/로컬에서 생성된다. 커밋 대상 아님.
+data/
+
+.env
+.env.local
+.DS_Store

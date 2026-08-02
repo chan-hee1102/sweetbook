@@ -1,0 +1,16 @@
+services:
+  web:
+    build: .
+    # 심사자 환경의 포트 충돌을 피하려면 PORT만 바꾸면 된다.
+    #   PORT=4000 docker compose up      (또는 아래 3000을 직접 수정)
+    ports:
+      - "${PORT:-3000}:3000"
+    environment:
+      # 외부 API 키는 하나도 쓰지 않는다. 이 앱이 읽는 환경변수는 DATA_DIR 뿐이다.
+      - DATA_DIR=/app/data
+    volumes:
+      - petnote_data:/app/data
+    restart: unless-stopped
+
+volumes:
+  petnote_data:
