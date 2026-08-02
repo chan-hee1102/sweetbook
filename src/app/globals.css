@@ -1,0 +1,337 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    /* 배경이 흰색이 아니라 한 단계 내린 면(#f2f4f8)이다. 밤에 정면으로 보는
+       화면이라 순백의 부담을 줄인다. 흰 카드가 이 위에서 떠 보이게 하는 일은
+       배경색이 아니라 테두리·그림자가 맡는다.
+
+       break-keep(word-break: keep-all)은 CSS 스펙이 한국어용으로 정의한 값이다.
+       기본값에서는 "건강수첩"처럼 짧은 단어도 음절 중간에서 잘린다. */
+    @apply break-keep break-words bg-ground text-ink-700 antialiased;
+  }
+
+  /* 모바일에서 입력창 포커스 시 화면이 확대되지 않도록 16px 이상 유지 */
+  input,
+  textarea,
+  select {
+    font-size: 16px;
+  }
+
+  /* 키보드 포커스는 어디서든 보여야 한다. */
+  :focus-visible {
+    @apply outline outline-2 outline-offset-2 outline-brand-700;
+  }
+}
+
+@layer components {
+  /*
+   * 표면은 3단계뿐이다.
+   *   L0 — 배경 위에 바로 텍스트. 읽기만 하는 모든 것
+   *   L1 — .card. 사용자가 입력하거나 선택하는 곳 (화면당 0~2개)
+   *   L2 — 솔리드 유채색. 그 화면의 단 하나의 결론 또는 액션 (화면당 최대 1개)
+   *
+   * 이전에는 .card 하나로 읽을 것·근거·누를 것을 전부 담아서, 한 화면에 같은
+   * 그릇이 셋씩 놓였다. 테두리를 뺀 이유가 여기 있다 — 계층은 배경 단계 차로
+   * 만들고, 테두리는 '누를 수 있음'의 신호로만 남긴다.
+   */
+  .card {
+    @apply rounded-card bg-white;
+    /* 배경(#f2f4f8)과 흰 카드의 명도차가 1.101밖에 안 돼서 카드가 배경에
+       묻혔다. 색을 바꾸는 대신 아주 얕은 테두리 한 겹과 그림자로 띄운다. */
+    box-shadow:
+      inset 0 0 0 1px rgba(20, 22, 31, 0.05),
+      0 1px 2px rgba(20, 22, 31, 0.05);
+  }
+
+  /*
+   * 버튼의 입체감은 '두께'로 만든다.
+   *
+   * 눌리는 물건은 옆면이 보인다. 그래서 세 겹을 쌓는다.
+   *   ① 테두리   — 남색(브랜드) 계열. 바닥에서 떨어져 있다는 윤곽
+   *   ② 아래 립  — 아래쪽 안쪽 그림자. 키캡의 두께
+   *   ③ 위 하이라이트 — 위에서 빛이 든다
+   * 누르면 립이 얇아지고 1px 내려앉는다. 크기가 아니라 두께가 사라지는 것이
+   * '눌림'으로 읽힌다.
+   */
+  .btn {
+    @apply inline-flex min-h-[44px] items-center justify-center gap-2 rounded-control
+           border px-4 py-3 text-body font-semibold
+           disabled:pointer-events-none disabled:opacity-50;
+    transition:
+      transform 0.1s ease,
+      box-shadow 0.1s ease,
+      background-color 0.1s ease;
+  }
+  .btn:active {
+    transform: translateY(1px);
+  }
+
+  .btn-primary {
+    @apply btn border-brand-900 bg-brand-700 text-white hover:bg-brand-800;
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.18),
+      inset 0 -2px 0 rgba(0, 0, 0, 0.22),
+      0 1px 2px rgba(20, 22, 31, 0.22);
+  }
+  .btn-primary:active {
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.1),
+      inset 0 -1px 0 rgba(0, 0, 0, 0.22);
+  }
+
+  .btn-ghost {
+    @apply btn border-ink-700 bg-white text-ink-800 hover:bg-ink-50;
+    box-shadow:
+      inset 0 -2px 0 rgba(20, 22, 31, 0.1),
+      0 1px 2px rgba(20, 22, 31, 0.12);
+  }
+  .btn-ghost:active {
+    box-shadow: inset 0 -1px 0 rgba(20, 22, 31, 0.12);
+  }
+
+  /*
+   * 홈의 메인 CTA — 이 화면에서 유일하게 '눌리는 물건'처럼 만든다.
+   *
+   * 입체감을 그림자 크기가 아니라 빛의 방향으로 만든다.
+   *   ① 위→아래 그라디언트: 팔레트의 500→600→700을 그대로 써서 위에서 빛이 든다
+   *   ② 상단 안쪽 하이라이트: 빛을 받는 모서리
+   *   ③ 하단 안쪽 어두운 립: 키캡의 두께
+   *   ④ 바깥 그림자는 '무채색'. 브랜드색 드롭섀도는 긴급이 아니라
+   *      프로모션 배너로 읽혀서 이 서비스의 톤을 망친다
+   *
+   * 누르면 1px 내려앉고 그림자가 얕아진다. 실제로 눌린 것처럼 보이게 하는 건
+   * 크기 변화가 아니라 이 그림자 감소다.
+   */
+  .btn-hero {
+    background-image: linear-gradient(
+      180deg,
+      theme("colors.brand.500") 0%,
+      theme("colors.brand.600") 52%,
+      theme("colors.brand.700") 100%
+    );
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.22),
+      inset 0 -2px 0 rgba(0, 0, 0, 0.2),
+      0 1px 2px rgba(20, 22, 31, 0.2),
+      0 10px 20px -10px rgba(20, 22, 31, 0.38);
+    transition:
+      transform 0.12s ease,
+      box-shadow 0.12s ease,
+      filter 0.12s ease;
+  }
+  /* 커서를 올리면 실제로 떠오른다. 밝기만 바꾸면 화면에서 티가 안 난다. */
+  .btn-hero:hover {
+    transform: translateY(-3px);
+    filter: brightness(1.12);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.3),
+      inset 0 -2px 0 rgba(0, 0, 0, 0.2),
+      0 3px 6px rgba(20, 22, 31, 0.18),
+      0 22px 36px -14px rgba(20, 22, 31, 0.55);
+  }
+  .btn-hero:active {
+    transform: translateY(1px);
+    filter: brightness(1);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.12),
+      inset 0 -1px 0 rgba(0, 0, 0, 0.22),
+      0 1px 2px rgba(20, 22, 31, 0.22);
+  }
+
+  /*
+   * 책 3종 원형 버튼.
+   *
+   * 책등에만 쓰던 세 색을 여기서 처음으로 '면'으로 쓴다. 목록에서는 세 권이
+   * 이름으로만 구분됐는데, 원형 버튼은 색이 곧 식별자가 되어 한눈에 갈린다.
+   * 메인 CTA와 같은 물리 규칙(위에서 빛, 아래 립, 무채색 그림자)을 따라
+   * 두 요소가 같은 재질로 읽히게 했다.
+   */
+  .book-orb {
+    @apply relative grid shrink-0 place-items-center rounded-full text-white;
+    background-color: var(--orb);
+    background-image: linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.24) 0%,
+      rgba(255, 255, 255, 0) 54%,
+      rgba(0, 0, 0, 0.18) 100%
+    );
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.3),
+      inset 0 -2px 0 rgba(0, 0, 0, 0.16),
+      0 2px 5px rgba(20, 22, 31, 0.16),
+      0 8px 16px -8px rgba(20, 22, 31, 0.3);
+    transition:
+      transform 0.16s ease,
+      box-shadow 0.16s ease,
+      filter 0.16s ease;
+  }
+  .group:hover .book-orb {
+    transform: translateY(-4px);
+    filter: brightness(1.12);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.36),
+      inset 0 -2px 0 rgba(0, 0, 0, 0.18),
+      0 4px 8px rgba(20, 22, 31, 0.18),
+      0 16px 26px -10px rgba(20, 22, 31, 0.42);
+  }
+  .group:active .book-orb {
+    transform: translateY(0);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.2),
+      inset 0 -1px 0 rgba(0, 0, 0, 0.2),
+      0 1px 3px rgba(20, 22, 31, 0.2);
+  }
+
+  .field {
+    @apply w-full rounded-control border border-ink-500 bg-white px-3 py-2.5
+           placeholder:text-ink-500 focus:border-brand-700;
+  }
+  .label {
+    @apply mb-1.5 block text-label font-bold uppercase text-ink-500;
+  }
+
+  /* 작은 링크·버튼도 최소 44px 터치 영역을 갖도록 */
+  .tap {
+    @apply inline-flex min-h-[44px] items-center;
+  }
+
+  /* 구분선. 감싸지 않고 가로 한 줄로만 쓴다. */
+  .rule {
+    @apply border-t border-ink-200;
+  }
+
+  /* 가로 스크롤이 필요한 곳에서 스크롤바 자체는 감춘다.
+     스크롤바가 보이면 콘텐츠가 잘린 것처럼 읽히고 높이도 흔들린다. */
+  .no-scrollbar {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  /*
+   * 단계 진행 팝업.
+   *
+   * 증상 확인은 '누구를 · 어디가 · 그래서 어떻게'라는 세 질문이다. 한 화면에
+   * 전부 펼치면 스무 개 넘는 선택지가 동시에 보여서, 급한 사람이 어디부터
+   * 봐야 할지 정해야 한다. 한 번에 한 질문만 묻는다.
+   */
+  .sheet {
+    @apply fixed inset-0 z-40 bg-ink-900/45 backdrop-blur-[2px];
+  }
+  .sheet-panel {
+    @apply mx-auto flex h-full max-w-app flex-col p-3;
+  }
+  .sheet-body {
+    @apply flex min-h-0 flex-1 flex-col overflow-hidden rounded-panel bg-white shadow-cover;
+  }
+
+  /*
+   * 사진 자리 — 세 층으로 만든다.
+   *   ① 단일 톤   ② 종이 결(feTurbulence)   ③ 왼쪽 위 단일 광원
+   * 결이 없으면 그냥 회색 사각형이고, 결이 있으면 '표면'이 된다.
+   * 그라디언트로 두 색을 섞지 않는다 — 색을 섞는 순간 무지개로 되돌아간다.
+   */
+  .photo-blank {
+    @apply relative overflow-hidden bg-ink-100;
+    box-shadow: inset 0 0 0 1px rgba(20, 22, 31, 0.06);
+  }
+  .photo-blank::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    opacity: 0.55;
+    background-image:
+      radial-gradient(
+        120% 95% at 26% 16%,
+        rgba(255, 255, 255, 0.95) 0%,
+        rgba(255, 255, 255, 0) 58%
+      ),
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E");
+    background-size: auto, 140px 140px;
+  }
+  /* 이름 첫 글자. 이모지가 아니라 본문 서체를 그대로 쓰므로,
+     이 자리가 '다른 시스템에서 온 그림'이 아니라 앱의 조판 일부가 된다. */
+  .photo-blank::after {
+    content: attr(data-initial);
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    font-size: calc(var(--tile, 40px) * 0.42);
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    line-height: 1;
+    color: rgba(20, 22, 31, 0.22);
+    user-select: none;
+  }
+
+  /*
+   * 책 표지 — 이 서비스의 시그니처.
+   *
+   * 세로 3:4 비율 + 책등 + 표지 위 제목, 이 셋이 '책'을 만든다.
+   * 이전에는 가로로 긴 그라디언트 띠라 배너로 읽혔고, 미리보기에서 본 물건이
+   * 주문 화면에서는 다른 것이 됐다.
+   *
+   * 유채색이 '면'이 아니라 4~10px 띠로만 나타나는 유일한 예외가 책등이다.
+   * 서가에서 사람이 실제로 보는 것은 표지가 아니라 책등이다.
+   */
+  .book-cover {
+    @apply relative overflow-hidden bg-ink-100 shadow-cover;
+    border-radius: 2px 6px 6px 2px;
+  }
+  .book-cover::before {
+    content: "";
+    position: absolute;
+    inset-block: 0;
+    left: 0;
+    z-index: 2;
+    width: var(--spine-w, 6px);
+    border-radius: 2px 0 0 2px;
+    background-color: var(--spine, theme("colors.brand.700"));
+    /* 검정·흰색 알파만 얹어 원통형 종이 묶음으로 만든다. 색은 섞지 않는다. */
+    background-image: linear-gradient(
+      90deg,
+      rgba(0, 0, 0, 0.34) 0%,
+      rgba(255, 255, 255, 0.34) 46%,
+      rgba(0, 0, 0, 0.14) 100%
+    );
+  }
+  /* 표지 결 — 사진 자리와 같은 것을 재사용해 두 물건이 같은 재질이 되게 한다. */
+  .book-cover::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    pointer-events: none;
+    opacity: 0.5;
+    background-image:
+      radial-gradient(
+        130% 80% at 22% 10%,
+        rgba(255, 255, 255, 0.9) 0%,
+        rgba(255, 255, 255, 0) 55%
+      ),
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E");
+    background-size: auto, 140px 140px;
+  }
+}
+
+/* 모션을 줄이도록 설정한 사용자에게는 전환·반복 애니메이션을 멈춘다. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
